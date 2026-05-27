@@ -1,5 +1,6 @@
 import { css } from "@emotion/react";
 import React from "react";
+import { BLUR_GLASS } from "@/theme/color";
 
 export function FullscreenModal({
   children,
@@ -15,8 +16,8 @@ export function FullscreenModal({
         height: "100%",
         position: "fixed",
         zIndex: 999,
-        backgroundColor: "#ffffffc9",
-        backdropFilter: "blur(12px)",
+        backgroundColor: "rgba(255, 255, 255, 0.88)",
+        backdropFilter: BLUR_GLASS,
         display: isOpen ? "flex" : "none",
       })}
     >

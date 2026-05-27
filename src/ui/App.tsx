@@ -1,5 +1,5 @@
 import { css, keyframes } from "@emotion/react";
-import { Space } from "../three/Space";
+import { Space, useHiddenStore } from "../three/Space";
 import { FullscreenModal } from "../components/FullscreenModal";
 import { Title } from "@/components/text/Title";
 import { Description } from "@/components/text/Description";
@@ -12,7 +12,13 @@ import {
   PrevButton,
 } from "@/components/button/BottomButton";
 import { BuildingHeights, Building } from "@/components/map/Processing";
-import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Loader2,
+  Eye,
+} from "lucide-react";
 import { useAreaStore } from "@/state/areaStore";
 import { useActionStore } from "@/state/exportStore";
 import { Modal } from "@/components/modal/Modal";
@@ -20,6 +26,8 @@ import { TopNav } from "@/components/nav/TopNav";
 import { getCookie } from "@/utils/cookie";
 import { Row } from "@/components/flex/Row";
 import instanceFleet from "@/api/axios";
+import { MovementPad } from "@/components/controls/MovementPad";
+import { StatsPanel } from "@/components/panels/StatsPanel";
 
 const IconSize = css({
   width: "14px",
@@ -27,20 +35,23 @@ const IconSize = css({
 });
 
 const spinAnimation = keyframes`
-from { transform: rotate(0deg); }
-to { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
+
+const STEPS = ["front", "processing"] as const;
 
 function App() {
   const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(true);
-  const [areaData, setAreaData] = useState([]);
-  const [steps, setSteps] = useState(["front", "processing"]);
+  const [areaData, setAreaData] = useState<{ lat: number; lng: number }[]>([]);
   const [step, setStep] = useState(0);
   const [isWarnModal, setIsWarnModal] = useState(false);
   const [isExportModal, setIsExportModal] = useState(false);
   const [isFleetLogin, setIsFleetLogin] = useState(false);
   const [isFleetModal, setIsFleetModal] = useState(false);
-  const [spaceList, setSpaceList] = useState([]);
+  const [spaceList, setSpaceList] = useState<
+    { id: string; title: string }[]
+  >([]);
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isFetchingBuildings, setIsFetchingBuildings] = useState(false);
   const [hasFetchedBuildings, setHasFetchedBuildings] = useState(false);
@@ -50,17 +61,14 @@ function App() {
   const setAction = useActionStore((state) => state.setAction);
   const setFleet = useActionStore((state) => state.setFleet);
 
-  const checkIsBig = () => {
+  const hiddenIds = useHiddenStore((s) => s.hiddenIds);
+  const showAll = useHiddenStore((s) => s.showAll);
+
+  const checkIsBig = (): boolean => {
+    if (areaData.length < 2) return false;
     const a = areaData[0].lat - areaData[1].lat;
     const b = areaData[0].lng - areaData[1].lng;
-
-    console.log(a + b);
-
-    if (a + b > 0.1) {
-      return true;
-    } else {
-      return false;
-    }
+    return a + b > 0.1;
   };
 
   const exportFile = () => {
@@ -72,19 +80,17 @@ function App() {
   };
 
   const getFleetSpaces = async () => {
-    const getSpace: any = await instanceFleet.get("space");
-
-    setSpaceList([
-      ...getSpace.data.spaces.map((item) => {
-        return {
-          ...item,
-          key: item.id,
-        };
-      }),
-    ]);
+    const getSpace: { data: { spaces: { id: string; title: string }[] } } =
+      await instanceFleet.get("space");
+    setSpaceList(
+      getSpace.data.spaces.map((item) => ({
+        ...item,
+        key: item.id,
+      }))
+    );
   };
 
-  const putGlbOnFleetSpace = (spaceId) => {
+  const putGlbOnFleetSpace = (spaceId: string) => {
     setFleet(spaceId, "fleet");
     setTimeout(() => {
       exportFleet();
@@ -102,13 +108,14 @@ function App() {
       if (isCookie) {
         setIsFleetLogin(true);
       }
-    } catch (error) {}
+    } catch {
+      // silently ignore cookie errors
+    }
   };
 
-  const handleDone = (data) => {
+  const handleDone = (data: { lat: number; lng: number }[]) => {
     setAreaData(data);
     setCenter(data);
-    console.log(data, "AAEE");
     setIsNextButtonDisabled(false);
     setBuildings([]);
     setHasFetchedBuildings(false);
@@ -122,6 +129,7 @@ function App() {
   };
 
   const requestBuildings = async () => {
+    if (areaData.length < 2) return;
     setIsFetchingBuildings(true);
 
     const south = areaData[1].lat;
@@ -129,6 +137,7 @@ function App() {
     const north = areaData[0].lat;
     const east = areaData[0].lng;
     const query = `[out:json][timeout:25];(way["building"]( ${south},${west},${north},${east} );relation["building"]( ${south},${west},${north},${east} ););out body geom;`;
+
     try {
       const response = await fetch("https://overpass-api.de/api/interpreter", {
         method: "POST",
@@ -136,13 +145,19 @@ function App() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       const data = await response.json();
-      const blds: Building[] = data.elements.map((element) => ({
-        id: element.id,
-        tags: element.tags,
-        geometry: element.geometry
-          ? element.geometry.map((pt) => ({ lat: pt.lat, lng: pt.lon }))
-          : undefined,
-      }));
+      const blds: Building[] = data.elements.map(
+        (element: {
+          id: number;
+          tags: { [key: string]: string | undefined };
+          geometry?: { lat: number; lon: number }[];
+        }) => ({
+          id: element.id,
+          tags: element.tags,
+          geometry: element.geometry
+            ? element.geometry.map((pt) => ({ lat: pt.lat, lng: pt.lon }))
+            : undefined,
+        })
+      );
       setBuildings(blds);
       appendAreas(blds);
       setHasFetchedBuildings(true);
@@ -154,11 +169,11 @@ function App() {
   };
 
   const handleClickNextStep = async () => {
-    if (step == 0 && checkIsBig()) {
+    if (step === 0 && checkIsBig()) {
       setIsWarnModal(true);
-      return false;
+      return;
     }
-    if (step == 1 && !hasFetchedBuildings) {
+    if (step === 1 && !hasFetchedBuildings) {
       await requestBuildings();
       return;
     }
@@ -181,23 +196,22 @@ function App() {
     <div css={css({ height: "100%", width: "100%" })}>
       <TopNav step={step} />
 
-      <FullscreenModal isOpen={steps[step] == "front"}>
+      {/* Step 0: Map Selection */}
+      <FullscreenModal isOpen={STEPS[step] === "front"}>
         <Column gap="1rem">
           <Column gap="0.5rem">
-            <Title>Generate 3d map</Title>
+            <Title>Generate 3D Digital Twin</Title>
             <Description>
-              Tools to create 3D maps based on maps and export them in GLB
-              format
+              Select a region on the map to generate an interactive 3D model.
+              Search for any location or draw a bounding box to begin.
             </Description>
           </Column>
-          <MapComponent
-            onRemove={handleRemove}
-            onDone={handleDone}
-          ></MapComponent>
+          <MapComponent onRemove={handleRemove} onDone={handleDone} />
         </Column>
       </FullscreenModal>
 
-      <FullscreenModal isOpen={steps[step] == "processing"}>
+      {/* Step 1: Processing */}
+      <FullscreenModal isOpen={STEPS[step] === "processing"}>
         <Column gap="1rem">
           <Column gap="0.5rem">
             <Title>Processing</Title>
@@ -214,12 +228,13 @@ function App() {
         </Column>
       </FullscreenModal>
 
-      <PrevButton isShow={step != 0} onClick={handleClickPrevStep}>
+      {/* Navigation Buttons */}
+      <PrevButton isShow={step !== 0} onClick={handleClickPrevStep}>
         <ChevronLeft css={IconSize} /> Prev Step
       </PrevButton>
 
       <NextButton
-        isShow={step != 2}
+        isShow={step !== 2}
         disabled={isNextButtonDisabled || isFetchingBuildings}
         onClick={handleClickNextStep}
       >
@@ -240,16 +255,59 @@ function App() {
         )}
       </NextButton>
 
-      <NextButton isShow={step == 2} onClick={handleClickExport}>
+      <NextButton isShow={step === 2} onClick={handleClickExport}>
         Export GLB <Download css={IconSize} />
       </NextButton>
 
+      {/* Show All Buildings (visible when buildings are hidden) */}
+      {step === 2 && hiddenIds.size > 0 && (
+        <button
+          onClick={showAll}
+          css={css({
+            position: "absolute",
+            zIndex: 9999,
+            right: "2rem",
+            bottom: "5rem",
+            color: "#000000",
+            backgroundColor: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(8px)",
+            border: "none",
+            padding: "0.5rem 1rem",
+            borderRadius: "8px",
+            fontWeight: "300",
+            fontSize: "12px",
+            outline: "rgba(240, 240, 244, 0.51) solid 0.1rem",
+            cursor: "pointer",
+            transition: "0.2s",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            ":hover": {
+              backgroundColor: "rgba(240, 242, 245, 0.9)",
+            },
+          })}
+        >
+          <Eye css={IconSize} /> Show All ({hiddenIds.size} hidden)
+        </button>
+      )}
+
+      {/* Stats Panel (3D view) */}
+      <StatsPanel
+        buildings={buildings}
+        area={areaData.length >= 2 ? areaData : null}
+        isVisible={step === 2}
+      />
+
+      {/* Movement Pad (3D view, mobile) */}
+      <MovementPad isVisible={step === 2} />
+
+      {/* Warning Modal */}
       <Modal isOpen={isWarnModal} onClose={() => setIsWarnModal(false)}>
         <Column gap="0.5rem">
-          <Title>The area is too big </Title>
+          <Title>The area is too big</Title>
           <Description>Do you want to proceed?</Description>
           <Button
-            isShow={step != 2}
+            isShow={step !== 2}
             disabled={isNextButtonDisabled}
             onClick={() => {
               setStep(step + 1);
@@ -261,43 +319,36 @@ function App() {
         </Column>
       </Modal>
 
+      {/* Export Modal */}
       <Modal isOpen={isExportModal} onClose={() => setIsExportModal(false)}>
         <Column gap="0.5rem">
           <Title>Export</Title>
-
           <Row gap="0.5rem">
             <Button isShow={true} onClick={exportFile}>
               GLB Download <Download css={IconSize} />
             </Button>
-
-            {/* {isFleetLogin ? (
-              <Button isShow={true} onClick={loadFleetSpace}>
-                Fleet Interlock
-              </Button>
-            ) : (
-              <Button
-                isShow={true}
-                onClick={() => window.open("https://fleet.im/auth")}
-              >
-                Fleet Login
-              </Button>
-            )} */}
           </Row>
         </Column>
       </Modal>
 
+      {/* Fleet Modal */}
       <Modal isOpen={isFleetModal} onClose={() => setIsFleetModal(false)}>
         <Column gap="0.5rem">
           <Title>Select Fleet Space</Title>
-          {spaceList.map((item, index) => (
-            <Button isShow={true} onClick={() => putGlbOnFleetSpace(item.id)}>
+          {spaceList.map((item) => (
+            <Button
+              key={item.id}
+              isShow={true}
+              onClick={() => putGlbOnFleetSpace(item.id)}
+            >
               {item.title}
             </Button>
           ))}
         </Column>
       </Modal>
 
-      <Space></Space>
+      {/* 3D Scene */}
+      <Space />
     </div>
   );
 }

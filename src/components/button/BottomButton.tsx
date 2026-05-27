@@ -1,5 +1,12 @@
 import { css } from "@emotion/react";
 import { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
+import {
+  BG_GLASS,
+  BG_GLASS_HOVER,
+  BORDER_COLOR,
+  TEXT_PRIMARY,
+  BLUR_GLASS,
+} from "@/theme/color";
 
 interface ButtonProps
   extends DetailedHTMLProps<
@@ -9,36 +16,42 @@ interface ButtonProps
   isShow?: boolean;
 }
 
+const baseButtonStyles = css({
+  color: TEXT_PRIMARY,
+  backgroundColor: BG_GLASS,
+  backdropFilter: BLUR_GLASS,
+  border: "none",
+  padding: "0.75rem 1.25rem",
+  borderRadius: "8px",
+  fontWeight: "300",
+  fontSize: "14px",
+  outline: `${BORDER_COLOR} solid 0.1rem`,
+  cursor: "pointer",
+  transition: "0.2s",
+  alignItems: "center",
+  gap: "0.5rem",
+  ":hover": {
+    backgroundColor: BG_GLASS_HOVER,
+  },
+  ":disabled": {
+    backgroundColor: BG_GLASS_HOVER,
+    cursor: "not-allowed",
+  },
+});
+
 export function NextButton(props: ButtonProps) {
   return (
     <button
-      css={css({
-        position: "absolute",
-        zIndex: 9999,
-        right: "2rem",
-        bottom: "2rem",
-        color: "#000000",
-        backgroundColor: "#ffffff96",
-        backdropFilter: "blur(8px)",
-        border: "none",
-        padding: "0.75rem 1.25rem",
-        borderRadius: "8px",
-        fontWeight: "300",
-        fontSize: "14px",
-        outline: "rgba(240, 240, 244, 0.51) solid 0.1rem",
-        cursor: "pointer",
-        transition: "0.2s",
-        display: props.isShow ? "flex" : "none",
-        alignItems: "center",
-        gap: "0.5rem",
-        ":hover": {
-          backgroundColor: "#ebeef0c2",
-        },
-        ":disabled": {
-          backgroundColor: "#ebeef0c2",
-          cursor: "not-allowed",
-        },
-      })}
+      css={[
+        baseButtonStyles,
+        css({
+          position: "absolute",
+          zIndex: 9999,
+          right: "2rem",
+          bottom: "2rem",
+          display: props.isShow ? "flex" : "none",
+        }),
+      ]}
       {...props}
     >
       {props.children}
@@ -49,33 +62,16 @@ export function NextButton(props: ButtonProps) {
 export function PrevButton(props: ButtonProps) {
   return (
     <button
-      css={css({
-        position: "absolute",
-        zIndex: 9999,
-        left: "2rem",
-        bottom: "2rem",
-        color: "#000000",
-        backgroundColor: "#ffffff96",
-        backdropFilter: "blur(8px)",
-        border: "none",
-        padding: "0.75rem 1.25rem",
-        borderRadius: "8px",
-        fontWeight: "300",
-        fontSize: "14px",
-        outline: "rgba(240, 240, 244, 0.51) solid 0.1rem",
-        cursor: "pointer",
-        transition: "0.2s",
-        display: props.isShow ? "flex" : "none",
-        alignItems: "center",
-        gap: "0.5rem",
-        ":hover": {
-          backgroundColor: "#ebeef0c2",
-        },
-        ":disabled": {
-          backgroundColor: "#ebeef0c2",
-          cursor: "not-allowed",
-        },
-      })}
+      css={[
+        baseButtonStyles,
+        css({
+          position: "absolute",
+          zIndex: 9999,
+          left: "2rem",
+          bottom: "2rem",
+          display: props.isShow ? "flex" : "none",
+        }),
+      ]}
       {...props}
     >
       {props.children}
@@ -86,29 +82,13 @@ export function PrevButton(props: ButtonProps) {
 export function Button(props: ButtonProps) {
   return (
     <button
-      css={css({
-        zIndex: 9999,
-        color: "#000000",
-        backgroundColor: "#ffffff96",
-        backdropFilter: "blur(8px)",
-        border: "none",
-        padding: "0.75rem 1.25rem",
-        borderRadius: "8px",
-        fontWeight: "300",
-        fontSize: "14px",
-        outline: "rgba(240, 240, 244, 0.51) solid 0.1rem",
-        cursor: "pointer",
-        transition: "0.2s",
-        display: props.isShow ? "" : "none",
-        gap: "0.5rem",
-        ":hover": {
-          backgroundColor: "#ebeef0c2",
-        },
-        ":disabled": {
-          backgroundColor: "#ebeef0c2",
-          cursor: "not-allowed",
-        },
-      })}
+      css={[
+        baseButtonStyles,
+        css({
+          zIndex: 9999,
+          display: props.isShow ? "inline-flex" : "none",
+        }),
+      ]}
       {...props}
     >
       {props.children}

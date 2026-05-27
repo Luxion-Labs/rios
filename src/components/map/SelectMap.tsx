@@ -3,37 +3,49 @@ import {
   MapContainer,
   Rectangle,
   TileLayer,
+  useMap,
   useMapEvents,
 } from "react-leaflet";
 import L, { LatLng, LatLngBounds } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { css } from "@emotion/react";
 import { CircleMinus, MousePointerClick } from "lucide-react";
+import { SearchBar } from "./SearchBar";
 
 const IconSize = css({
   width: "14px",
   height: "14px",
 });
 
+/** Fly the map to given coordinates */
+function FlyToLocation({
+  position,
+}: {
+  position: { lat: number; lng: number } | null;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) {
+      map.flyTo([position.lat, position.lng], 15, { duration: 1.5 });
+    }
+  }, [position, map]);
+  return null;
+}
+
 function RectangleSelector({
   isDrag = true,
-
   bounds,
   drawBounds,
-
   onChange,
   onDrawChange,
 }: {
   isDrag: boolean;
-
   bounds: LatLngBounds | null;
   drawBounds: LatLngBounds | null;
-
   onChange: (bounds: LatLngBounds) => void;
   onDrawChange: (bounds: LatLngBounds) => void;
 }) {
   const [firstPoint, setFirstPoint] = useState<LatLng | null>(null);
-
   const lastLatlngRef = useRef<LatLng | null>(null);
 
   const adjustLng = (latlng: LatLng): LatLng => {
@@ -72,7 +84,7 @@ function RectangleSelector({
     const handleTouchStart = (e: TouchEvent) => {
       if (!isDrag && e.touches.length > 0) {
         const touch = e.touches[0];
-        const latlng = map.mouseEventToLatLng(touch as any);
+        const latlng = map.mouseEventToLatLng(touch as unknown as MouseEvent);
         setFirstPoint(latlng);
       }
     };
@@ -80,18 +92,16 @@ function RectangleSelector({
     const handleTouchMove = (e: TouchEvent) => {
       if (firstPoint && e.touches.length > 0) {
         const touch = e.touches[0];
-        const latlng = map.mouseEventToLatLng(touch as any);
+        const latlng = map.mouseEventToLatLng(touch as unknown as MouseEvent);
         lastLatlngRef.current = latlng;
-
         onDrawChange(new L.LatLngBounds(firstPoint, latlng));
         onChange(new L.LatLngBounds(adjustLng(firstPoint), adjustLng(latlng)));
       }
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
+    const handleTouchEnd = () => {
       if (firstPoint) {
         const latlng = lastLatlngRef.current || firstPoint;
-
         onDrawChange(new L.LatLngBounds(firstPoint, latlng));
         onChange(new L.LatLngBounds(adjustLng(firstPoint), adjustLng(latlng)));
         setFirstPoint(null);
@@ -124,12 +134,16 @@ export function MapComponent({
   onDone,
   onRemove,
 }: {
-  onDone: (e) => void;
+  onDone: (e: { lat: number; lng: number }[]) => void;
   onRemove: () => void;
 }) {
   const [isDrag, setIsDrag] = useState(true);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [drawBounds, setDrawBounds] = useState<LatLngBounds | null>(null);
+  const [flyTarget, setFlyTarget] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const handleClickSwitchDrag = () => {
     setIsDrag(!isDrag);
@@ -142,22 +156,26 @@ export function MapComponent({
     setIsDrag(true);
   };
 
-  const handleChangeDone = (e) => {
+  const handleChangeDone = (e: LatLngBounds) => {
     setBounds(e);
-    onDone([e._northEast, e._southWest]);
+    onDone([e.getNorthEast(), e.getSouthWest()]);
   };
 
-  const handleChangeDraw = (e) => {
+  const handleChangeDraw = (e: LatLngBounds) => {
     setDrawBounds(e);
-    onDone([e._northEast, e._southWest]);
+    onDone([e.getNorthEast(), e.getSouthWest()]);
+  };
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setFlyTarget({ lat, lng });
   };
 
   return (
-    <div
-      css={css({
-        position: "relative",
-      })}
-    >
+    <div css={css({ position: "relative" })}>
+      {/* Search bar */}
+      <SearchBar onLocationSelect={handleLocationSelect} />
+
+      {/* Map action buttons */}
       <div
         css={css({
           position: "absolute",
@@ -171,9 +189,9 @@ export function MapComponent({
       >
         <button
           css={css({
-            display: bounds == null || isDrag == true ? "none" : "flex",
+            display:
+              bounds == null || isDrag === true ? "none" : "flex",
             color: "#ffffff",
-
             backgroundColor: "#ef4444",
             backdropFilter: "blur(8px)",
             border: "none",
@@ -196,7 +214,6 @@ export function MapComponent({
         <button
           css={css({
             color: isDrag ? "#ffffff" : "#000000",
-
             backgroundColor: isDrag ? "#007bffe8" : "#ffffff96",
             backdropFilter: "blur(8px)",
             border: "none",
@@ -223,14 +240,16 @@ export function MapComponent({
       <MapContainer
         center={[40.8, -73.95]}
         zoom={13}
+        minZoom={2}
+        maxZoom={19}
         style={{
           height: "70vh",
           width: "100%",
         }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         <RectangleSelector
           bounds={bounds}
@@ -239,6 +258,7 @@ export function MapComponent({
           onChange={handleChangeDone}
           onDrawChange={handleChangeDraw}
         />
+        <FlyToLocation position={flyTarget} />
       </MapContainer>
     </div>
   );

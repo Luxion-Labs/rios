@@ -8,8 +8,8 @@ export interface Building {
 }
 
 const spinAnimation = keyframes`
-from { transform: rotate(0deg); }
-to { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
 
 export function BuildingHeights({
@@ -20,11 +20,7 @@ export function BuildingHeights({
   loading: boolean;
 }) {
   return (
-    <div
-      css={css({
-        position: "relative",
-      })}
-    >
+    <div css={css({ position: "relative" })}>
       {loading && (
         <div
           css={css({
@@ -43,32 +39,56 @@ export function BuildingHeights({
           Fetching building information...
         </div>
       )}
+
+      {!loading && buildings.length > 0 && (
+        <div
+          css={css({
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            color: "#555",
+            fontSize: "13px",
+            padding: "0.5rem 0",
+          })}
+        >
+          <span css={css({ color: "#007bff", fontWeight: 600 })}>
+            {buildings.length}
+          </span>
+          buildings loaded — click Next Step to view in 3D
+        </div>
+      )}
+
       <ul
         css={css({
           overflow: "scroll",
           zIndex: 999,
           position: "absolute",
-          top: "1rem",
-          height: "80vh",
+          top: "2.5rem",
+          height: "70vh",
+          listStyle: "none",
+          padding: 0,
+          margin: 0,
+          color: "#666",
+          fontSize: "12px",
         })}
       >
         {buildings.map((b) => (
-          <li key={b.id}>
-            <div>Building {b.id}</div>
+          <li
+            key={b.id}
+            css={css({
+              padding: "0.4rem 0",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+            })}
+          >
+            <div css={css({ fontWeight: 500 })}>Building {b.id}</div>
             <div>Height: {b.tags.height || "No height info"}</div>
-            <div>Location/Shape:</div>
             {b.geometry ? (
-              <ul>
-                {b.geometry.map((pt, index) => (
-                  <li key={index}>
-                    ({pt.lat.toFixed(5)}, {pt.lng.toFixed(5)})
-                  </li>
-                ))}
-              </ul>
+              <div css={css({ fontSize: "11px", color: "#999" })}>
+                {b.geometry.length} vertices
+              </div>
             ) : (
               <div>No geometry info</div>
             )}
-            <div>Other Tags: {JSON.stringify(b.tags)}</div>
           </li>
         ))}
       </ul>

@@ -1,78 +1,49 @@
 import React, { useEffect, useState } from "react";
-
 import { css, keyframes } from "@emotion/react";
+import { BG_OVERLAY, BORDER_COLOR, SHADOW_GLASS } from "@/theme/color";
 
-type ModalType = {
-  children?: any;
-  onClose?: any;
+interface ModalProps {
+  children?: React.ReactNode;
+  onClose?: () => void;
   isOpen?: boolean;
   isScroll?: boolean;
-};
+}
 
 const fadeInBackground = keyframes`
-0% {
-    backdrop-filter: brightness(100%)
-
-}
-  100% {
-    backdrop-filter: brightness(70%)
-  }
+  from { backdrop-filter: brightness(100%); opacity: 0; }
+  to   { backdrop-filter: brightness(70%); opacity: 1; }
 `;
 
 const fadeOutBackground = keyframes`
-0% {
-    backdrop-filter: brightness(70%)
-
-}
-  100% {
-    backdrop-filter: brightness(100%)
-  }
+  from { backdrop-filter: brightness(70%); opacity: 1; }
+  to   { backdrop-filter: brightness(100%); opacity: 0; }
 `;
 
 const fadeIn = keyframes`
-    0% {
-        transform: translateY(-10px);
-    opacity: 40%;
-
-    }
-    100% {
-        transform: translateY(0px);
-        opacity: 100%;
-
-    }
+  from { transform: translateY(-10px); opacity: 0.4; }
+  to   { transform: translateY(0px);   opacity: 1; }
 `;
 
 const fadeOut = keyframes`
-    0% {
-        transform: translateY(0px);
-    opacity: 100%;
-
-    }
-    100% {
-        transform: translateY(-10px);
-        opacity: 0%;
-
-    }
+  from { transform: translateY(0px);   opacity: 1; }
+  to   { transform: translateY(-10px); opacity: 0; }
 `;
 
-function Modal({ children, onClose, isOpen, isScroll = false }: ModalType) {
+function Modal({ children, onClose, isOpen, isScroll = false }: ModalProps) {
   const [open, setOpen] = useState(false);
-  const [fadeOutAnimation, setFadeOutAnimation] = useState(
+  const [contentAnim, setContentAnim] = useState(
     `${fadeIn} 0.3s forwards`
   );
-  const [backgroundAnimation, setBackgroundAnimation] = useState(
+  const [bgAnim, setBgAnim] = useState(
     `${fadeInBackground} 0.3s forwards`
   );
 
-  const handleClose = (e: any) => {
-    if (e.target.id != "modal") {
-      return false;
-    }
-    setFadeOutAnimation(`${fadeOut} 0.3s forwards`);
-    setBackgroundAnimation(`${fadeOutBackground} 0.3s forwards`);
-
+  const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).id !== "modal") return;
+    setContentAnim(`${fadeOut} 0.3s forwards`);
+    setBgAnim(`${fadeOutBackground} 0.3s forwards`);
     setTimeout(() => {
-      onClose();
+      onClose?.();
       setOpen(false);
     }, 280);
   };
@@ -80,14 +51,13 @@ function Modal({ children, onClose, isOpen, isScroll = false }: ModalType) {
   useEffect(() => {
     if (isOpen) {
       setOpen(true);
-      setFadeOutAnimation(`${fadeIn} 0.3s forwards`);
-      setBackgroundAnimation(`${fadeInBackground} 0.3s forwards`);
-    } else {
-      setFadeOutAnimation(`${fadeOut} 0.3s forwards`);
-      setBackgroundAnimation(`${fadeOutBackground} 0.3s forwards`);
-
+      setContentAnim(`${fadeIn} 0.3s forwards`);
+      setBgAnim(`${fadeInBackground} 0.3s forwards`);
+    } else if (open) {
+      setContentAnim(`${fadeOut} 0.3s forwards`);
+      setBgAnim(`${fadeOutBackground} 0.3s forwards`);
       setTimeout(() => {
-        onClose();
+        onClose?.();
         setOpen(false);
       }, 280);
     }
@@ -104,10 +74,10 @@ function Modal({ children, onClose, isOpen, isScroll = false }: ModalType) {
         width: "100%",
         height: "100%",
         position: "fixed",
-        top: "0",
-        left: "0",
+        top: 0,
+        left: 0,
         backdropFilter: "brightness(70%)",
-        animation: backgroundAnimation,
+        animation: bgAnim,
         scrollbarWidth: "none",
         zIndex: 3000,
         transition: "0.1s",
@@ -117,23 +87,17 @@ function Modal({ children, onClose, isOpen, isScroll = false }: ModalType) {
         css={css({
           width: "100%",
           height: isScroll ? "70vh" : "auto",
-          "@media (min-width: 1000px)": {
-            width: "40vw",
-          },
-          "@media (min-width: 1400px)": {
-            width: "30vw",
-          },
+          "@media (min-width: 1000px)": { width: "40vw" },
+          "@media (min-width: 1400px)": { width: "30vw" },
           margin: "2rem",
           padding: "1.6rem 1.6rem",
           backgroundColor: "#ffffff",
           borderRadius: "0.6rem",
           border: `0.1rem solid #dddddd`,
-          boxShadow: `rgba(147, 148, 158, 0.25) 0px 7px 40px`,
-          fontFamily: "'Noto Sans KR', sans-serif",
-          overflow: "scroll",
+          boxShadow: SHADOW_GLASS,
+          overflow: isScroll ? "auto" : "visible",
           wordBreak: "break-all",
-          //translate: "translateY(-10px)",
-          animation: fadeOutAnimation,
+          animation: contentAnim,
         })}
       >
         {children}
