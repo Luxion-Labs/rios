@@ -7,4 +7,8 @@ declare global {
       "three-line": Object3DNode<THREE.Line, typeof THREE.Line>;
     }
   }
+
+  interface Window {
+    riosExportModel?: (mode: "glb" | "fleet") => void;
+  }
 }
