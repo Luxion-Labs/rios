@@ -1,18 +1,22 @@
 import { useCarStore } from "@/state/carStore";
 import {
-  BG_GLASS,
-  BG_GLASS_HOVER,
+  ACCENT_BLUE,
   BORDER_COLOR,
+  BLUR_GLASS,
+  SHADOW_GLASS,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
-  BLUR_GLASS,
-  ACCENT_BLUE,
 } from "@/theme/color";
 import { css } from "@emotion/react";
-import { DetailedHTMLProps, ButtonHTMLAttributes, useState } from "react";
-import { Modal } from "../modal/Modal";
-import { Column } from "../flex/Column";
-import { Title } from "../text/Title";
+import { DetailedHTMLProps, ButtonHTMLAttributes } from "react";
+import {
+  CarFront,
+  Github,
+  Layers3,
+  Sparkles,
+  SquareDashedMousePointer,
+  Video,
+} from "lucide-react";
 
 const TOP_PANEL_HEIGHT = "3rem";
 
@@ -32,161 +36,186 @@ export function TopNav({ step }: { step: number }) {
   const thirdMode = useCarStore((state) => state.thirdMode);
   const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-  const [openModal, setOpenModal] = useState(false);
-
   return (
-    <>
+    <div
+      css={css({
+        display: "flex",
+        transition: "all 0.3s ease",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        minHeight: TOP_PANEL_HEIGHT,
+        padding: "0.75rem 1rem",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(247,249,253,0.78))",
+        backdropFilter: BLUR_GLASS,
+        borderBottom: `1px solid ${BORDER_COLOR}`,
+        boxShadow: SHADOW_GLASS,
+        zIndex: 9999,
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: "1rem",
+      })}
+    >
       <div
         css={css({
-          display: "flex",
-          transition: "all 0.3s ease",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: TOP_PANEL_HEIGHT,
-          backgroundColor: "rgba(255, 255, 255, 0.80)",
-          backdropFilter: BLUR_GLASS,
-          borderBottom: `1px solid ${BORDER_COLOR}`,
-          zIndex: 9999,
-          justifyContent: "space-between",
           alignItems: "center",
+          flexDirection: "row",
+          display: "flex",
+          gap: "0.85rem",
+          minWidth: 0,
         })}
       >
-        {/* Logo */}
         <div
           css={css({
-            paddingLeft: "2rem",
-            alignItems: "center",
-            flexDirection: "row",
-            display: "flex",
-            gap: "0.75rem",
+            width: "2.35rem",
+            height: "2.35rem",
+            borderRadius: "14px",
+            display: "grid",
+            placeItems: "center",
+            background:
+              "linear-gradient(135deg, rgba(37,99,235,0.14), rgba(20,184,166,0.14))",
+            border: `1px solid ${BORDER_COLOR}`,
+            color: ACCENT_BLUE,
+            flexShrink: 0,
           })}
         >
-          <span
-            css={css({
-              fontSize: "14px",
-              fontWeight: "600",
-              color: TEXT_SECONDARY,
-            })}
-          >
-            🗺️ Rios
-          </span>
+          <Layers3 size={18} />
+        </div>
 
-          {/* Step Indicator */}
+        <div css={css({ minWidth: 0 })}>
           <div
             css={css({
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              marginLeft: "1rem",
-              [mq[0]]: { display: "none" },
+              fontFamily: '"Space Grotesk", "Manrope", sans-serif',
+              fontSize: "15px",
+              fontWeight: 700,
+              color: TEXT_PRIMARY,
+              lineHeight: 1.1,
             })}
           >
-            {["Select", "Process", "View"].map((label, i) => (
-              <div
-                key={label}
-                css={css({
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                })}
-              >
-                <div
-                  css={css({
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    backgroundColor:
-                      i <= step ? ACCENT_BLUE : "rgba(0, 0, 0, 0.12)",
-                    transition: "all 0.3s ease",
-                    boxShadow:
-                      i === step ? `0 0 6px ${ACCENT_BLUE}` : "none",
-                  })}
-                />
-                <span
-                  css={css({
-                    fontSize: "11px",
-                    fontWeight: i === step ? "500" : "400",
-                    color: i === step ? TEXT_PRIMARY : TEXT_SECONDARY,
-                    transition: "all 0.3s ease",
-                    [mq[0]]: { display: "none" },
-                  })}
-                >
-                  {label}
-                </span>
-                {i < 2 && (
-                  <div
-                    css={css({
-                      width: "16px",
-                      height: "1px",
-                      backgroundColor:
-                        i < step
-                          ? "rgba(0, 123, 255, 0.3)"
-                          : "rgba(0, 0, 0, 0.08)",
-                      transition: "all 0.3s ease",
-                    })}
-                  />
-                )}
-              </div>
-            ))}
+            Rios
+          </div>
+          <div
+            css={css({
+              fontSize: "11px",
+              color: TEXT_SECONDARY,
+              marginTop: "0.15rem",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            })}
+          >
+            Select, process, and export 3D city data
           </div>
         </div>
 
         <div
           css={css({
-            padding: "0rem 0rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            marginLeft: "0.5rem",
             [mq[0]]: { display: "none" },
           })}
-        />
-
-        {/* Right-side actions */}
-        <div
-          css={css({
-            paddingRight: "2rem",
-            display: "flex",
-            flexDirection: "row",
-            gap: "0.5rem",
-          })}
         >
-          <NavButton
-            isShow={true}
-            onClick={() => window.open("https://github.com/Invariants0/rios")}
-          >
-            GitHub
-          </NavButton>
-          <NavButton isShow={step >= 1} onClick={() => setOpenModal(true)}>
-            Options
-          </NavButton>
-
-          {!isMobile && (
-            <>
-              {thirdMode ? (
-                <NavButton
-                  isShow={step === 2}
-                  onClick={() => setThirdMode(false)}
-                >
-                  Disable Car
-                </NavButton>
-              ) : (
-                <NavButton
-                  isShow={step === 2}
-                  onClick={() => setThirdMode(true)}
-                >
-                  Car Mode
-                </NavButton>
+          {[
+            { label: "Select", icon: Sparkles },
+            { label: "Process", icon: Video },
+            { label: "View", icon: SquareDashedMousePointer },
+          ].map((item, i) => (
+            <div
+              key={item.label}
+              css={css({
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.45rem 0.7rem",
+                borderRadius: "999px",
+                backgroundColor:
+                  i <= step ? "rgba(37, 99, 235, 0.08)" : "transparent",
+              })}
+            >
+              <div
+                css={css({
+                  width: "1.15rem",
+                  height: "1.15rem",
+                  borderRadius: "999px",
+                  backgroundColor:
+                    i <= step ? ACCENT_BLUE : "rgba(148, 163, 184, 0.28)",
+                  display: "grid",
+                  placeItems: "center",
+                  color: "#fff",
+                  boxShadow:
+                    i === step ? `0 0 0 4px rgba(37,99,235,0.12)` : "none",
+                })}
+              />
+              <span
+                css={css({
+                  fontSize: "12px",
+                  fontWeight: i === step ? "700" : "500",
+                  color: i === step ? TEXT_PRIMARY : TEXT_SECONDARY,
+                })}
+              >
+                {item.label}
+              </span>
+              {i < 2 && (
+                <div
+                  css={css({
+                    width: "14px",
+                    height: "1px",
+                    backgroundColor:
+                      i < step
+                        ? "rgba(37, 99, 235, 0.35)"
+                        : "rgba(15, 23, 42, 0.08)",
+                  })}
+                />
               )}
-            </>
-          )}
+            </div>
+          ))}
         </div>
       </div>
 
-      <Modal isOpen={openModal} onClose={() => setOpenModal(false)}>
-        <Column gap="0.5rem">
-          <Title>Options</Title>
-        </Column>
-      </Modal>
-    </>
+      <div
+        css={css({
+          display: "flex",
+          flexDirection: "row",
+          gap: "0.55rem",
+          flexWrap: "wrap",
+          justifyContent: "flex-end",
+        })}
+      >
+        <NavButton
+          isShow={true}
+          onClick={() => window.open("https://github.com/Invariants0/rios")}
+        >
+          <Github size={14} />
+          GitHub
+        </NavButton>
+
+        {!isMobile && (
+          <>
+            {thirdMode ? (
+              <NavButton
+                isShow={step === 2}
+                onClick={() => setThirdMode(false)}
+              >
+                <CarFront size={14} />
+                Exit Car
+              </NavButton>
+            ) : (
+              <NavButton
+                isShow={step === 2}
+                onClick={() => setThirdMode(true)}
+              >
+                <CarFront size={14} />
+                Car Mode
+              </NavButton>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -195,19 +224,25 @@ export function NavButton(props: NavButtonProps) {
     <button
       css={css({
         color: TEXT_PRIMARY,
-        backgroundColor: BG_GLASS,
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,247,252,0.88))",
         backdropFilter: BLUR_GLASS,
-        border: "none",
-        padding: "0.5rem 1rem",
-        borderRadius: "8px",
-        fontWeight: "300",
+        border: `1px solid ${BORDER_COLOR}`,
+        padding: "0.68rem 0.95rem",
+        borderRadius: "999px",
+        fontWeight: "700",
         fontSize: "12px",
-        outline: `${BORDER_COLOR} solid 0.1rem`,
-        display: props.isShow ? "" : "none",
+        display: props.isShow ? "inline-flex" : "none",
         cursor: "pointer",
-        transition: "all 0.2s ease",
+        transition:
+          "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
+        alignItems: "center",
+        gap: "0.45rem",
+        boxShadow: "0 12px 24px rgba(15, 23, 42, 0.08)",
         ":hover": {
-          backgroundColor: BG_GLASS_HOVER,
+          backgroundColor: "rgba(255,255,255,0.98)",
+          transform: "translateY(-1px)",
+          boxShadow: "0 16px 30px rgba(15, 23, 42, 0.12)",
         },
       })}
       {...props}
