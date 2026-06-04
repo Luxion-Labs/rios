@@ -542,19 +542,20 @@ function Roads({
 // ─── Export ───
 export function Export() {
   const { scene } = useThree();
-  const action = useActionStore((state) => state.action);
-  const fleetSpaceId = useActionStore((state) => state.fleetSpaceId);
-  const exportType = useActionStore((state) => state.exportType);
-  const setAction = useActionStore((state) => state.setAction);
+  const getActionState = useActionStore.getState;
 
   useEffect(() => {
-    if (action === true) {
-      setAction(false);
-      exportGLB();
-    }
-  }, [action, setAction, scene]);
+    window.riosExportModel = (mode: "glb" | "fleet") => {
+      exportGLB(mode);
+    };
+
+    return () => {
+      window.riosExportModel = undefined;
+    };
+  }, [scene]);
 
   const uploadFleet = async (blob: Blob) => {
+    const { fleetSpaceId } = getActionState();
     const formData = new FormData();
     formData.append("object", blob, "box3d.glb");
     formData.append("title", "New Object");
@@ -566,8 +567,9 @@ export function Export() {
     });
   };
 
-  const exportGLB = () => {
+  const exportGLB = (mode: "glb" | "fleet") => {
     const exportRoot = new THREE.Group();
+    scene.updateMatrixWorld(true);
     scene.traverse((child) => {
       if (child.userData?.exportToGLB === true) {
         exportRoot.add(child.clone(true));
@@ -576,6 +578,12 @@ export function Export() {
 
     const exporter = new GLTFExporter();
     const options = { binary: true, embedImages: true };
+    exportRoot.updateMatrixWorld(true);
+
+    if (exportRoot.children.length === 0) {
+      console.error("GLB export skipped: no exportable objects were found.");
+      return;
+    }
 
     exporter.parse(
       exportRoot,
@@ -583,7 +591,7 @@ export function Export() {
         if (result instanceof ArrayBuffer) {
           const blob = new Blob([result], { type: "model/gltf-binary" });
 
-          if (exportType === "glb") {
+          if (mode === "glb") {
             const link = document.createElement("a");
             link.style.display = "none";
             document.body.appendChild(link);
@@ -591,9 +599,10 @@ export function Export() {
             link.download = "scene.glb";
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
           }
 
-          if (exportType === "fleet") {
+          if (mode === "fleet") {
             uploadFleet(blob);
           }
         } else {
