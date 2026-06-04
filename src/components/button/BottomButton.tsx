@@ -6,6 +6,7 @@ import {
   BORDER_COLOR,
   TEXT_PRIMARY,
   BLUR_GLASS,
+  SHADOW_GLASS,
 } from "@/theme/color";
 
 interface ButtonProps
@@ -20,22 +21,29 @@ const baseButtonStyles = css({
   color: TEXT_PRIMARY,
   backgroundColor: BG_GLASS,
   backdropFilter: BLUR_GLASS,
-  border: "none",
-  padding: "0.75rem 1.25rem",
-  borderRadius: "8px",
-  fontWeight: "300",
-  fontSize: "14px",
-  outline: `${BORDER_COLOR} solid 0.1rem`,
+  border: `1px solid ${BORDER_COLOR}`,
+  boxShadow: SHADOW_GLASS,
+  padding: "0.8rem 1.05rem",
+  borderRadius: "999px",
+  fontWeight: "600",
+  fontSize: "13px",
   cursor: "pointer",
-  transition: "0.2s",
+  letterSpacing: "0.01em",
+  transition: "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
   alignItems: "center",
   gap: "0.5rem",
+  minHeight: "46px",
   ":hover": {
     backgroundColor: BG_GLASS_HOVER,
+    transform: "translateY(-1px)",
+    boxShadow: "0 18px 38px rgba(15, 23, 42, 0.18)",
   },
   ":disabled": {
     backgroundColor: BG_GLASS_HOVER,
     cursor: "not-allowed",
+    opacity: 0.7,
+    transform: "none",
+    boxShadow: "none",
   },
 });
 
@@ -44,13 +52,7 @@ export function NextButton(props: ButtonProps) {
     <button
       css={[
         baseButtonStyles,
-        css({
-          position: "absolute",
-          zIndex: 9999,
-          right: "2rem",
-          bottom: "2rem",
-          display: props.isShow ? "flex" : "none",
-        }),
+        css({ display: props.isShow ? "inline-flex" : "none" }),
       ]}
       {...props}
     >
@@ -64,13 +66,7 @@ export function PrevButton(props: ButtonProps) {
     <button
       css={[
         baseButtonStyles,
-        css({
-          position: "absolute",
-          zIndex: 9999,
-          left: "2rem",
-          bottom: "2rem",
-          display: props.isShow ? "flex" : "none",
-        }),
+        css({ display: props.isShow ? "inline-flex" : "none" }),
       ]}
       {...props}
     >
@@ -84,10 +80,7 @@ export function Button(props: ButtonProps) {
     <button
       css={[
         baseButtonStyles,
-        css({
-          zIndex: 9999,
-          display: props.isShow ? "inline-flex" : "none",
-        }),
+        css({ display: props.isShow ? "inline-flex" : "none" }),
       ]}
       {...props}
     >
