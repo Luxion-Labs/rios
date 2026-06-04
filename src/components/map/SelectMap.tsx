@@ -9,38 +9,36 @@ import {
 import L, { LatLng, LatLngBounds } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { css } from "@emotion/react";
-import { CircleMinus, MousePointerClick } from "lucide-react";
-import { SearchBar } from "./SearchBar";
+import { Hand, SquareMousePointer, Trash2 } from "lucide-react";
 
 const IconSize = css({
   width: "14px",
   height: "14px",
 });
 
-/** Fly the map to given coordinates */
 function FlyToLocation({
   position,
 }: {
   position: { lat: number; lng: number } | null;
 }) {
   const map = useMap();
+
   useEffect(() => {
     if (position) {
       map.flyTo([position.lat, position.lng], 15, { duration: 1.5 });
     }
   }, [position, map]);
+
   return null;
 }
 
 function RectangleSelector({
   isDrag = true,
-  bounds,
   drawBounds,
   onChange,
   onDrawChange,
 }: {
   isDrag: boolean;
-  bounds: LatLngBounds | null;
   drawBounds: LatLngBounds | null;
   onChange: (bounds: LatLngBounds) => void;
   onDrawChange: (bounds: LatLngBounds) => void;
@@ -126,24 +124,30 @@ function RectangleSelector({
   }, [isDrag, map]);
 
   return drawBounds ? (
-    <Rectangle bounds={drawBounds} pathOptions={{ color: "blue" }} />
+    <Rectangle
+      bounds={drawBounds}
+      pathOptions={{
+        color: "rgba(37, 99, 235, 0.95)",
+        weight: 2,
+        fillColor: "rgba(37, 99, 235, 0.14)",
+        fillOpacity: 0.18,
+      }}
+    />
   ) : null;
 }
 
 export function MapComponent({
-  onDone,
   onRemove,
+  onDone,
+  flyTarget,
 }: {
   onDone: (e: { lat: number; lng: number }[]) => void;
   onRemove: () => void;
+  flyTarget: { lat: number; lng: number } | null;
 }) {
   const [isDrag, setIsDrag] = useState(true);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [drawBounds, setDrawBounds] = useState<LatLngBounds | null>(null);
-  const [flyTarget, setFlyTarget] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
 
   const handleClickSwitchDrag = () => {
     setIsDrag(!isDrag);
@@ -166,16 +170,17 @@ export function MapComponent({
     onDone([e.getNorthEast(), e.getSouthWest()]);
   };
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setFlyTarget({ lat, lng });
-  };
-
   return (
-    <div css={css({ position: "relative" })}>
-      {/* Search bar */}
-      <SearchBar onLocationSelect={handleLocationSelect} />
-
-      {/* Map action buttons */}
+    <div
+      css={css({
+        position: "relative",
+        borderRadius: "24px",
+        overflow: "hidden",
+        border: "1px solid rgba(17, 24, 39, 0.08)",
+        boxShadow: "0 26px 60px rgba(15, 23, 42, 0.14)",
+        background: "rgba(255, 255, 255, 0.55)",
+      })}
+    >
       <div
         css={css({
           position: "absolute",
@@ -185,55 +190,66 @@ export function MapComponent({
           display: "flex",
           justifyContent: "flex-end",
           gap: "0.5rem",
+          flexWrap: "wrap",
         })}
       >
         <button
           css={css({
-            display:
-              bounds == null || isDrag === true ? "none" : "flex",
+            display: bounds == null || isDrag ? "none" : "inline-flex",
             color: "#ffffff",
-            backgroundColor: "#ef4444",
-            backdropFilter: "blur(8px)",
-            border: "none",
-            padding: "0.5rem 1rem",
-            borderRadius: "8px",
-            outline: "#ef4444c2 solid 0.1rem",
+            backgroundColor: "rgba(239, 68, 68, 0.95)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(239, 68, 68, 0.22)",
+            padding: "0.65rem 0.95rem",
+            borderRadius: "999px",
             cursor: "pointer",
-            transition: "0.2s",
+            transition:
+              "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
             alignItems: "center",
             gap: "0.5rem",
+            boxShadow: "0 12px 24px rgba(239, 68, 68, 0.18)",
             ":hover": {
-              backgroundColor: "#ef4444",
+              backgroundColor: "rgba(220, 38, 38, 0.98)",
+              transform: "translateY(-1px)",
             },
           })}
           onClick={handleClickRemoveBox}
         >
-          <CircleMinus css={IconSize} /> Remove Box
+          <Trash2 css={IconSize} /> Remove Box
         </button>
 
         <button
           css={css({
-            color: isDrag ? "#ffffff" : "#000000",
-            backgroundColor: isDrag ? "#007bffe8" : "#ffffff96",
-            backdropFilter: "blur(8px)",
-            border: "none",
-            padding: "0.5rem 1rem",
-            borderRadius: "8px",
-            outline: isDrag
-              ? "#086ad4c2 solid 0.1rem"
-              : "rgba(240, 240, 244, 0.51) solid 0.1rem",
+            color: isDrag ? "#ffffff" : "#111827",
+            backgroundColor: isDrag
+              ? "rgba(37, 99, 235, 0.94)"
+              : "rgba(255,255,255,0.92)",
+            backdropFilter: "blur(12px)",
+            border: `1px solid ${
+              isDrag ? "rgba(37,99,235,0.2)" : "rgba(17,24,39,0.08)"
+            }`,
+            padding: "0.65rem 0.95rem",
+            borderRadius: "999px",
             cursor: "pointer",
-            transition: "0.2s",
-            display: "flex",
+            transition:
+              "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
+            display: "inline-flex",
             alignItems: "center",
             gap: "0.5rem",
+            boxShadow: isDrag
+              ? "0 12px 24px rgba(37, 99, 235, 0.18)"
+              : "0 12px 24px rgba(15, 23, 42, 0.08)",
             ":hover": {
-              backgroundColor: isDrag ? "#085fbd" : "#ebeef0c2",
+              backgroundColor: isDrag
+                ? "rgba(29, 78, 216, 0.98)"
+                : "rgba(255,255,255,0.98)",
+              transform: "translateY(-1px)",
             },
           })}
           onClick={handleClickSwitchDrag}
         >
-          {isDrag ? <SelectBox /> : "Back to Drag"}
+          {isDrag ? <SelectBox /> : <Hand css={IconSize} />}
+          <span>{isDrag ? "Draw Box" : "Back to Drag"}</span>
         </button>
       </div>
 
@@ -243,7 +259,7 @@ export function MapComponent({
         minZoom={2}
         maxZoom={19}
         style={{
-          height: "70vh",
+          height: "clamp(380px, 56vh, 620px)",
           width: "100%",
         }}
       >
@@ -252,7 +268,6 @@ export function MapComponent({
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         <RectangleSelector
-          bounds={bounds}
           drawBounds={drawBounds}
           isDrag={isDrag}
           onChange={handleChangeDone}
@@ -267,8 +282,7 @@ export function MapComponent({
 function SelectBox() {
   return (
     <>
-      <MousePointerClick css={IconSize} />
-      <span>Select Box</span>
+      <SquareMousePointer css={IconSize} />
     </>
   );
 }
