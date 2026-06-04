@@ -6,6 +6,6 @@
 <p align="center">A Map to 3D website for turning open map data into interactive scenes</p>
 
 <p align="center">
-  <a href="https://rios.luxionlabs.com/">Visit Website</a> ·
+  <a href="https://www.rios.luxionlabs.com/">Visit Website</a> ·
   <a href="https://github.com/Invariants0/rios.gitissues">Report Bugs</a>
 </p>
