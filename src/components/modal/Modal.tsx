@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { css, keyframes } from "@emotion/react";
-import { BG_OVERLAY, BORDER_COLOR, SHADOW_GLASS } from "@/theme/color";
+import {
+  BG_OVERLAY,
+  BORDER_COLOR,
+  SHADOW_GLASS,
+  BLUR_GLASS,
+} from "@/theme/color";
 
 interface ModalProps {
   children?: React.ReactNode;
@@ -76,28 +81,42 @@ function Modal({ children, onClose, isOpen, isScroll = false }: ModalProps) {
         position: "fixed",
         top: 0,
         left: 0,
-        backdropFilter: "brightness(70%)",
+        background: BG_OVERLAY,
+        backdropFilter: "blur(10px) brightness(80%)",
         animation: bgAnim,
         scrollbarWidth: "none",
         zIndex: 3000,
         transition: "0.1s",
+        padding: "1rem",
       })}
     >
       <div
         css={css({
           width: "100%",
-          height: isScroll ? "70vh" : "auto",
-          "@media (min-width: 1000px)": { width: "40vw" },
-          "@media (min-width: 1400px)": { width: "30vw" },
-          margin: "2rem",
-          padding: "1.6rem 1.6rem",
-          backgroundColor: "#ffffff",
-          borderRadius: "0.6rem",
-          border: `0.1rem solid #dddddd`,
+          maxWidth: "560px",
+          maxHeight: isScroll ? "70vh" : "min(70vh, 720px)",
+          margin: "auto",
+          padding: "1.35rem",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.92))",
+          borderRadius: "24px",
+          border: `1px solid ${BORDER_COLOR}`,
+          backdropFilter: BLUR_GLASS,
           boxShadow: SHADOW_GLASS,
-          overflow: isScroll ? "auto" : "visible",
-          wordBreak: "break-all",
+          overflow: isScroll ? "auto" : "hidden",
+          wordBreak: "break-word",
+          position: "relative",
           animation: contentAnim,
+          "::before": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            borderRadius: "24px",
+            padding: "1px",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0))",
+            pointerEvents: "none",
+          },
         })}
       >
         {children}
