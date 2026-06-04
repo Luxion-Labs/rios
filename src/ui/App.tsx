@@ -5,6 +5,7 @@ import { Title } from "@/components/text/Title";
 import { Description } from "@/components/text/Description";
 import { Column } from "@/components/flex/Column";
 import { MapComponent } from "@/components/map/SelectMap";
+import { SearchBar } from "@/components/map/SearchBar";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -15,16 +16,18 @@ import { BuildingHeights, Building } from "@/components/map/Processing";
 import {
   ChevronLeft,
   ChevronRight,
+  CloudUpload,
   Download,
-  Loader2,
   Eye,
+  Layers3,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { useAreaStore } from "@/state/areaStore";
 import { useActionStore } from "@/state/exportStore";
 import { Modal } from "@/components/modal/Modal";
 import { TopNav } from "@/components/nav/TopNav";
 import { getCookie } from "@/utils/cookie";
-import { Row } from "@/components/flex/Row";
 import instanceFleet from "@/api/axios";
 import { MovementPad } from "@/components/controls/MovementPad";
 import { StatsPanel } from "@/components/panels/StatsPanel";
@@ -32,6 +35,7 @@ import { StatsPanel } from "@/components/panels/StatsPanel";
 const IconSize = css({
   width: "14px",
   height: "14px",
+  flexShrink: 0,
 });
 
 const spinAnimation = keyframes`
@@ -44,9 +48,12 @@ const STEPS = ["front", "processing"] as const;
 function App() {
   const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(true);
   const [areaData, setAreaData] = useState<{ lat: number; lng: number }[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [step, setStep] = useState(0);
   const [isWarnModal, setIsWarnModal] = useState(false);
-  const [isExportModal, setIsExportModal] = useState(false);
   const [isFleetLogin, setIsFleetLogin] = useState(false);
   const [isFleetModal, setIsFleetModal] = useState(false);
   const [spaceList, setSpaceList] = useState<
@@ -58,7 +65,7 @@ function App() {
 
   const setCenter = useAreaStore((state) => state.setCenter);
   const appendAreas = useAreaStore((state) => state.appendAreas);
-  const setAction = useActionStore((state) => state.setAction);
+  const setExportType = useActionStore((state) => state.setExportType);
   const setFleet = useActionStore((state) => state.setFleet);
 
   const hiddenIds = useHiddenStore((s) => s.hiddenIds);
@@ -71,12 +78,8 @@ function App() {
     return a + b > 0.1;
   };
 
-  const exportFile = () => {
-    setAction(true);
-  };
-
-  const exportFleet = () => {
-    setAction(true);
+  const triggerExport = () => {
+    window.riosExportModel?.("glb");
   };
 
   const getFleetSpaces = async () => {
@@ -92,9 +95,8 @@ function App() {
 
   const putGlbOnFleetSpace = (spaceId: string) => {
     setFleet(spaceId, "fleet");
-    setTimeout(() => {
-      exportFleet();
-    }, 100);
+    setExportType("fleet");
+    window.riosExportModel?.("fleet");
   };
 
   const loadFleetSpace = () => {
@@ -185,7 +187,8 @@ function App() {
   };
 
   const handleClickExport = () => {
-    setIsExportModal(true);
+    setExportType("glb");
+    triggerExport();
   };
 
   useEffect(() => {
@@ -193,26 +196,72 @@ function App() {
   }, []);
 
   return (
-    <div css={css({ height: "100%", width: "100%" })}>
+    <div
+      css={css({
+        height: "100%",
+        width: "100%",
+        position: "relative",
+        overflow: "hidden",
+      })}
+    >
       <TopNav step={step} />
 
       {/* Step 0: Map Selection */}
       <FullscreenModal isOpen={STEPS[step] === "front"}>
-        <Column gap="1rem">
+        <Column gap="1rem" css={css({ flex: 1, minHeight: 0 })}>
           <Column gap="0.5rem">
-            <Title>Generate 3D Digital Twin</Title>
+            <Title>Generate 3D Map</Title>
             <Description>
               Select a region on the map to generate an interactive 3D model.
               Search for any location or draw a bounding box to begin.
             </Description>
           </Column>
-          <MapComponent onRemove={handleRemove} onDone={handleDone} />
+          <SearchBar
+            onLocationSelect={(lat, lng) => setSelectedLocation({ lat, lng })}
+          />
+          <MapComponent
+            onRemove={handleRemove}
+            onDone={handleDone}
+            flyTarget={selectedLocation}
+          />
+
+          <div
+            css={css({
+              display: "flex",
+              justifyContent: "flex-end",
+              paddingTop: "0.5rem",
+              marginTop: "auto",
+              paddingBottom: "0.5rem",
+            })}
+          >
+            <NextButton
+              isShow={step !== 2}
+              disabled={isNextButtonDisabled || isFetchingBuildings}
+              onClick={handleClickNextStep}
+            >
+              {isFetchingBuildings ? (
+                <>
+                  <Loader2
+                    css={[
+                      IconSize,
+                      css({ animation: `${spinAnimation} 1s linear infinite` }),
+                    ]}
+                  />
+                  Fetching...
+                </>
+              ) : (
+                <>
+                  Next Step <ChevronRight css={IconSize} />
+                </>
+              )}
+            </NextButton>
+          </div>
         </Column>
       </FullscreenModal>
 
       {/* Step 1: Processing */}
       <FullscreenModal isOpen={STEPS[step] === "processing"}>
-        <Column gap="1rem">
+        <Column gap="1rem" css={css({ flex: 1, minHeight: 0 })}>
           <Column gap="0.5rem">
             <Title>Processing</Title>
             <Description>
@@ -225,39 +274,116 @@ function App() {
               loading={isFetchingBuildings}
             />
           </Column>
+
+          <div
+            css={css({
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              paddingTop: "0.5rem",
+              marginTop: "auto",
+              paddingBottom: "0.5rem",
+            })}
+          >
+            <PrevButton isShow={step !== 0} onClick={handleClickPrevStep}>
+              <ChevronLeft css={IconSize} /> Back
+            </PrevButton>
+
+            <NextButton
+              isShow={step !== 2}
+              disabled={isNextButtonDisabled || isFetchingBuildings}
+              onClick={handleClickNextStep}
+            >
+              {isFetchingBuildings ? (
+                <>
+                  <Loader2
+                    css={[
+                      IconSize,
+                      css({ animation: `${spinAnimation} 1s linear infinite` }),
+                    ]}
+                  />
+                  Fetching...
+                </>
+              ) : (
+                <>
+                  Next Step <ChevronRight css={IconSize} />
+                </>
+              )}
+            </NextButton>
+          </div>
         </Column>
       </FullscreenModal>
 
-      {/* Navigation Buttons */}
-      <PrevButton isShow={step !== 0} onClick={handleClickPrevStep}>
-        <ChevronLeft css={IconSize} /> Prev Step
-      </PrevButton>
+      {step === 2 && (
+        <div
+          css={css({
+            position: "fixed",
+            right: "1.5rem",
+            bottom: "1.5rem",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.75rem",
+            alignItems: "flex-end",
+          })}
+        >
+          {isFleetLogin && (
+            <button
+              onClick={loadFleetSpace}
+              css={css({
+                color: "#111827",
+                backgroundColor: "rgba(255, 255, 255, 0.88)",
+                backdropFilter: "blur(14px)",
+                border: "1px solid rgba(17,24,39,0.08)",
+                padding: "0.65rem 0.95rem",
+                borderRadius: "999px",
+                fontWeight: "700",
+                fontSize: "12px",
+                cursor: "pointer",
+                transition:
+                  "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                boxShadow: "0 12px 24px rgba(15, 23, 42, 0.08)",
+                ":hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.98)",
+                  transform: "translateY(-1px)",
+                },
+              })}
+            >
+              <CloudUpload css={IconSize} /> Send to Fleet
+            </button>
+          )}
 
-      <NextButton
-        isShow={step !== 2}
-        disabled={isNextButtonDisabled || isFetchingBuildings}
-        onClick={handleClickNextStep}
-      >
-        {isFetchingBuildings ? (
-          <>
-            <Loader2
-              css={[
-                IconSize,
-                css({ animation: `${spinAnimation} 1s linear infinite` }),
-              ]}
-            />
-            Fetching...
-          </>
-        ) : (
-          <>
-            Next Step <ChevronRight css={IconSize} />
-          </>
-        )}
-      </NextButton>
-
-      <NextButton isShow={step === 2} onClick={handleClickExport}>
-        Export GLB <Download css={IconSize} />
-      </NextButton>
+          <button
+            onClick={handleClickExport}
+            css={css({
+              color: "#ffffff",
+              backgroundColor: "rgba(37, 99, 235, 0.96)",
+              backdropFilter: "blur(14px)",
+              border: "1px solid rgba(37,99,235,0.18)",
+              padding: "0.72rem 1rem",
+              borderRadius: "999px",
+              fontWeight: "700",
+              fontSize: "12px",
+              cursor: "pointer",
+              transition:
+                "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              boxShadow: "0 14px 30px rgba(37, 99, 235, 0.22)",
+              ":hover": {
+                backgroundColor: "rgba(29, 78, 216, 0.98)",
+                transform: "translateY(-1px)",
+              },
+            })}
+          >
+            <Download css={IconSize} /> Export as GLB
+          </button>
+        </div>
+      )}
 
       {/* Show All Buildings (visible when buildings are hidden) */}
       {step === 2 && hiddenIds.size > 0 && (
@@ -268,26 +394,28 @@ function App() {
             zIndex: 9999,
             right: "2rem",
             bottom: "5rem",
-            color: "#000000",
-            backgroundColor: "rgba(255, 255, 255, 0.85)",
-            backdropFilter: "blur(8px)",
-            border: "none",
-            padding: "0.5rem 1rem",
-            borderRadius: "8px",
-            fontWeight: "300",
+            color: "#111827",
+            backgroundColor: "rgba(255, 255, 255, 0.88)",
+            backdropFilter: "blur(14px)",
+            border: "1px solid rgba(17,24,39,0.08)",
+            padding: "0.65rem 0.95rem",
+            borderRadius: "999px",
+            fontWeight: "700",
             fontSize: "12px",
-            outline: "rgba(240, 240, 244, 0.51) solid 0.1rem",
             cursor: "pointer",
-            transition: "0.2s",
+            transition:
+              "transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease",
             display: "flex",
             alignItems: "center",
-            gap: "0.4rem",
+            gap: "0.5rem",
+            boxShadow: "0 12px 24px rgba(15, 23, 42, 0.08)",
             ":hover": {
-              backgroundColor: "rgba(240, 242, 245, 0.9)",
+              backgroundColor: "rgba(255, 255, 255, 0.98)",
+              transform: "translateY(-1px)",
             },
           })}
         >
-          <Eye css={IconSize} /> Show All ({hiddenIds.size} hidden)
+          <Eye css={IconSize} /> Reveal hidden ({hiddenIds.size})
         </button>
       )}
 
@@ -303,8 +431,29 @@ function App() {
 
       {/* Warning Modal */}
       <Modal isOpen={isWarnModal} onClose={() => setIsWarnModal(false)}>
-        <Column gap="0.5rem">
-          <Title>The area is too big</Title>
+        <Column gap="0.85rem">
+          <div
+            css={css({
+              display: "flex",
+              alignItems: "center",
+              gap: "0.65rem",
+            })}
+          >
+            <div
+              css={css({
+                width: "2rem",
+                height: "2rem",
+                borderRadius: "999px",
+                display: "grid",
+                placeItems: "center",
+                background: "rgba(245, 158, 11, 0.12)",
+                color: "#d97706",
+              })}
+            >
+              <AlertTriangle size={14} />
+            </div>
+            <Title>The area is too big</Title>
+          </div>
           <Description>Do you want to proceed?</Description>
           <Button
             isShow={step !== 2}
@@ -314,34 +463,23 @@ function App() {
               setIsWarnModal(false);
             }}
           >
-            Next Step <ChevronRight css={IconSize} />
+            Continue <ChevronRight css={IconSize} />
           </Button>
-        </Column>
-      </Modal>
-
-      {/* Export Modal */}
-      <Modal isOpen={isExportModal} onClose={() => setIsExportModal(false)}>
-        <Column gap="0.5rem">
-          <Title>Export</Title>
-          <Row gap="0.5rem">
-            <Button isShow={true} onClick={exportFile}>
-              GLB Download <Download css={IconSize} />
-            </Button>
-          </Row>
         </Column>
       </Modal>
 
       {/* Fleet Modal */}
       <Modal isOpen={isFleetModal} onClose={() => setIsFleetModal(false)}>
-        <Column gap="0.5rem">
+        <Column gap="0.85rem">
           <Title>Select Fleet Space</Title>
+          <Description>Pick a destination space for the exported GLB file.</Description>
           {spaceList.map((item) => (
             <Button
               key={item.id}
               isShow={true}
               onClick={() => putGlbOnFleetSpace(item.id)}
             >
-              {item.title}
+              <Layers3 css={IconSize} /> {item.title}
             </Button>
           ))}
         </Column>
