@@ -7,8 +7,10 @@ export function Title({ children }: { children?: React.ReactNode }) {
       css={css({
         margin: 0,
         color: SUBTITLE_COLOR,
-        fontSize: "1.125rem",
-        fontWeight: "600",
+        fontSize: "1.2rem",
+        fontWeight: "800",
+        letterSpacing: "-0.02em",
+        fontFamily: '"Space Grotesk", "Manrope", sans-serif',
       })}
     >
       {children}
