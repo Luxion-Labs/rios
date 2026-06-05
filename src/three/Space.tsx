@@ -153,11 +153,16 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
               width: "220px",
               boxShadow: "0 2px 14px rgba(0, 0, 0, 0.16)",
               transition: "all 0.2s ease-in-out",
+              position: "relative",
             }}
           >
             {/* Title */}
             <div
               style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "10px",
                 fontWeight: "600",
                 fontSize: "15px",
                 borderBottom: tags.name
@@ -167,7 +172,48 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
                 marginBottom: tags.name ? "8px" : "4px",
               }}
             >
-              {tags.name || "Building Information"}
+              <span>{tags.name || "Building Information"}</span>
+              <button
+                type="button"
+                aria-label="Close building information"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHovered(false);
+                  setShowAdditionalInfo(false);
+                  setShowTranslations(false);
+                  selectBuilding(null);
+                }}
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  flex: "0 0 24px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid rgba(0, 0, 0, 0.08)",
+                  borderRadius: "6px",
+                  backgroundColor: "rgba(255, 255, 255, 0.72)",
+                  color: "#5f6368",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  lineHeight: "1",
+                  padding: "0",
+                  transition: "background-color 0.15s ease, color 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  const target = e.currentTarget;
+                  target.style.backgroundColor = "rgba(17, 24, 39, 0.06)";
+                  target.style.color = "#111827";
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.currentTarget;
+                  target.style.backgroundColor = "rgba(255, 255, 255, 0.72)";
+                  target.style.color = "#5f6368";
+                }}
+              >
+                ×
+              </button>
             </div>
 
             {/* Core info or No Data */}
