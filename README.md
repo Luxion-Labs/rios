@@ -20,6 +20,10 @@ Rios is an interactive spatial intelligence platform that combines traditional m
 
 Rios unites geospatial data, mapping, and a synchronized 3D scene into a single interactive interface. Users can search, inspect, and annotate assets while both the map and the 3D visualization remain consistent.
 
+Rios is intended for operations, planning, and analytics teams that need a spatially coherent view of assets and activity. It bridges the gap between traditional GIS workflows and immersive 3D visualization by keeping contextual data synchronized across views.
+
+The platform is optimized for incremental data loading and responsive interactions. Typical workflows include asset inspection, area management, route and vehicle monitoring, and lightweight annotation. Rios is designed to scale from single-site deployments to city-scale datasets by streaming scene geometry and prioritizing visible assets.
+
 **Maintainer note**: I have over 10 years of experience managing open source projects and designed this README to follow established best practices for clarity and contributor onboarding.
 
 ## Quick start
@@ -63,32 +67,9 @@ Top-level files and directories
 
 Rios loads backend geospatial and scene data through an API layer. Data is stored in global stores and consumed by both the map UI and the 3D renderer so that interactions update every view instantly.
 
-## Demo script
+## Roadmap
 
-<details>
-<summary>Show demo script and narration (1 to 3 minutes)</summary>
-
-1. Problem (20 to 30 seconds)
-
-   Organizations manage vehicles, infrastructure, and geographic data through disconnected tools. Understanding what is happening on the ground is difficult, and decision making is slower than it should be.
-
-2. Solution (20 seconds)
-
-   Rios provides a unified workspace that combines maps with immersive 3D visualization so teams can explore and act on spatial data visually.
-
-3. Product demo (60 to 90 seconds)
-
-   On startup Rios loads geospatial and scene data. Use search to find locations, select assets, inspect vehicles, and navigate the 3D scene. Create annotations and manage areas of interest while the map and 3D scene remain synchronized.
-
-4. Technology (20 to 30 seconds)
-
-   Built with React, TypeScript, Vite, and Three.js. State management is centralized and data is fetched via an Axios based API layer.
-
-5. Future scope (20 to 30 seconds)
-
-   Roadmap items include real-time IoT integration, live vehicle tracking, collaborative workflows, and AI powered spatial insights.
-
-</details>
+Future priorities include real-time IoT integration, live vehicle tracking, multi-user collaboration, AI powered spatial insights, and tools for large-scale digital twin deployments.
 
 ## Technical notes and design choices
 
@@ -121,14 +102,4 @@ This repository is currently private. Choose a license and update `package.json`
 
 For questions or collaboration inquiries open an issue or contact the maintainers through the repository.
 
-<p align="center">
-  <img src="./public/preview.png" alt="Rios preview" width="100%" />
-</p>
-
-<h1 align="center">Rios</h1>
-<p align="center">A Map to 3D website for turning open map data into interactive scenes</p>
-
-<p align="center">
-  <a href="https://www.rios.luxionlabs.com/">Visit Website</a> ·
-  <a href="https://github.com/Invariants0/rios.gitissues">Report Bugs</a>
-</p>
+<!-- Footer image and duplicated header removed by request -->
