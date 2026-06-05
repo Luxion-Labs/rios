@@ -132,6 +132,23 @@ function Building({
     tags.amenity ||
     tags["addr:street"];
 
+  const closePopup = () => {
+    setHovered(false);
+    setShowAdditionalInfo(false);
+    setShowTranslations(false);
+    setShowAnnotationForm(false);
+    selectBuilding(null);
+  };
+
+  const openAnnotationEditor = () => {
+    setShowAdditionalInfo(false);
+    setShowTranslations(false);
+    setAnnotationTitle(annotation?.title ?? "");
+    setAnnotationNotes(annotation?.notes ?? "");
+    setAnnotationColor(annotation?.color ?? "red");
+    setShowAnnotationForm(true);
+  };
+
   return (
     <>
       {annotation && (
@@ -195,10 +212,7 @@ function Building({
         e.nativeEvent.preventDefault();
         setHoverPos(e.point.clone());
         selectBuilding(buildingId);
-        setAnnotationTitle(annotation?.title ?? "");
-        setAnnotationNotes(annotation?.notes ?? "");
-        setAnnotationColor(annotation?.color ?? "red");
-        setShowAnnotationForm(true);
+        openAnnotationEditor();
         e.stopPropagation();
       }}
       rotation={[-Math.PI / 2, 0, 0]}
@@ -256,11 +270,7 @@ function Building({
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setHovered(false);
-                  setShowAdditionalInfo(false);
-                  setShowTranslations(false);
-                  setShowAnnotationForm(false);
-                  selectBuilding(null);
+                  closePopup();
                 }}
                 style={{
                   width: "24px",
@@ -510,10 +520,7 @@ function Building({
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setAnnotationTitle(annotation.title);
-                      setAnnotationNotes(annotation.notes);
-                      setAnnotationColor(annotation.color);
-                      setShowAnnotationForm(true);
+                      openAnnotationEditor();
                     }}
                     style={{
                       border: "none",
@@ -790,11 +797,7 @@ function Building({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setHovered(false);
-                  setShowAdditionalInfo(false);
-                  setShowTranslations(false);
-                  setShowAnnotationForm(false);
-                  selectBuilding(null);
+                  closePopup();
                   toggleHidden(buildingId);
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
