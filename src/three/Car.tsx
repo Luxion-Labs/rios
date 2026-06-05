@@ -69,9 +69,6 @@ const Car = () => {
   const keys = useRef<KeyState>({ w: false, s: false, a: false, d: false });
   const velocity = useRef(0);
 
-  // Expose key setters for on-screen controls
-  const setKey = useCarStore((state) => state.setKey);
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key.toLowerCase()) {
@@ -162,22 +159,6 @@ const Car = () => {
       return () => document.removeEventListener("mousemove", onMouseMove);
     }
   }, [thirdMode]);
-
-  // Subscribe to on-screen control key presses
-  useEffect(() => {
-    const unsub = useCarStore.subscribe((state) => {
-      if (state.pressedKey) {
-        keys.current[state.pressedKey as keyof KeyState] = true;
-      }
-      // Reset any released keys
-      (["w", "s", "a", "d"] as const).forEach((k) => {
-        if (state.pressedKey !== k && !state.pressedKey) {
-          // Don't override keyboard-held keys
-        }
-      });
-    });
-    return unsub;
-  }, []);
 
   useFrame((_, delta) => {
     if (carRef.current) {

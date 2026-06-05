@@ -29,7 +29,7 @@ import { Modal } from "@/components/modal/Modal";
 import { TopNav } from "@/components/nav/TopNav";
 import { getCookie } from "@/utils/cookie";
 import instanceFleet from "@/api/axios";
-import { MovementPad } from "@/components/controls/MovementPad";
+import { MovementHint } from "@/components/controls/MovementHint";
 import { StatsPanel } from "@/components/panels/StatsPanel";
 
 const IconSize = css({
@@ -426,8 +426,8 @@ function App() {
         isVisible={step === 2}
       />
 
-      {/* Movement Pad (3D view, mobile) */}
-      <MovementPad isVisible={step === 2} />
+      {/* Movement hint (car mode) */}
+      <MovementHint isVisible={step === 2} />
 
       {/* Warning Modal */}
       <Modal isOpen={isWarnModal} onClose={() => setIsWarnModal(false)}>
