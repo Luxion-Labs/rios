@@ -10,10 +10,11 @@ export function MovementHint({ isVisible }: { isVisible: boolean }) {
     <div
       css={css({
         position: "fixed",
-        right: "1rem",
-        bottom: "1rem",
+        right: "1.5rem",
+        bottom: "6.5rem",
         zIndex: 9999,
         maxWidth: "min(20rem, calc(100vw - 2rem))",
+        pointerEvents: "none",
         userSelect: "none",
         padding: "0.8rem 0.95rem",
         borderRadius: "14px",
