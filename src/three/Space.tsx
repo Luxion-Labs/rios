@@ -459,6 +459,90 @@ function Building({
               </form>
             )}
 
+            {annotation && !showAnnotationForm && (
+              <div
+                style={{
+                  marginBottom: "10px",
+                  paddingBottom: "10px",
+                  borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                    marginBottom: annotation.notes ? "6px" : "0",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      minWidth: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        flex: "0 0 8px",
+                        borderRadius: "999px",
+                        backgroundColor: ANNOTATION_COLORS[annotation.color],
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {annotation.title}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAnnotationTitle(annotation.title);
+                      setAnnotationNotes(annotation.notes);
+                      setAnnotationColor(annotation.color);
+                      setShowAnnotationForm(true);
+                    }}
+                    style={{
+                      border: "none",
+                      backgroundColor: "transparent",
+                      color: "#2563eb",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      padding: "2px 0",
+                    }}
+                  >
+                    Edit
+                  </button>
+                </div>
+                {annotation.notes && (
+                  <div
+                    style={{
+                      color: "#5f6368",
+                      fontSize: "12px",
+                      lineHeight: 1.45,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {annotation.notes}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Core info or No Data */}
             {hasAnyData ? (
               <>
