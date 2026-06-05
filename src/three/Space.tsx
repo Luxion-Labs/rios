@@ -14,13 +14,16 @@ const SCALE = 51000;
 // ─── Hidden Buildings Store ───
 interface HiddenStore {
   hiddenIds: Set<number>;
+  selectedBuildingId: number | null;
   toggleHidden: (id: number) => void;
+  selectBuilding: (id: number | null) => void;
   showAll: () => void;
   hiddenCount: () => number;
 }
 
 export const useHiddenStore = create<HiddenStore>((set, get) => ({
   hiddenIds: new Set(),
+  selectedBuildingId: null,
   toggleHidden: (id) =>
     set((state) => {
       const next = new Set(state.hiddenIds);
@@ -29,8 +32,13 @@ export const useHiddenStore = create<HiddenStore>((set, get) => ({
       } else {
         next.add(id);
       }
-      return { hiddenIds: next };
+      return {
+        hiddenIds: next,
+        selectedBuildingId:
+          state.selectedBuildingId === id ? null : state.selectedBuildingId,
+      };
     }),
+  selectBuilding: (id) => set({ selectedBuildingId: id }),
   showAll: () => set({ hiddenIds: new Set() }),
   hiddenCount: () => get().hiddenIds.size,
 }));
@@ -77,16 +85,18 @@ interface BuildingProps {
 
 function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
   const [hovered, setHovered] = useState(false);
-  const [clicked, setClicked] = useState(false);
   const [hoverPos, setHoverPos] = useState<THREE.Vector3 | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
 
   const toggleHidden = useHiddenStore((s) => s.toggleHidden);
+  const selectedBuildingId = useHiddenStore((s) => s.selectedBuildingId);
+  const selectBuilding = useHiddenStore((s) => s.selectBuilding);
+  const selected = selectedBuildingId === buildingId;
 
   const baseColor = getBuildingColor(tags);
   const displayColor =
-    clicked ? SELECTED_COLOR : hovered ? HOVERED_COLOR : baseColor;
+    selected ? SELECTED_COLOR : hovered ? HOVERED_COLOR : baseColor;
 
   const hasAnyData =
     tags.name ||
@@ -111,7 +121,7 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
         e.stopPropagation();
       }}
       onClick={(e) => {
-        setClicked(!clicked);
+        selectBuilding(selected ? null : buildingId);
         e.stopPropagation();
       }}
       rotation={[-Math.PI / 2, 0, 0]}
@@ -119,7 +129,7 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
     >
       <extrudeGeometry args={[shape, extrudeSettings]} />
       <meshStandardMaterial color={displayColor} />
-      {(hovered || clicked) && hoverPos && (
+      {(hovered || selected) && hoverPos && (
         <Html
           position={[
             hoverPos.x,
@@ -276,7 +286,11 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
                     justifyContent: "space-between",
                     alignItems: "center",
                   }}
-                  onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAdditionalInfo(!showAdditionalInfo);
+                  }}
                 >
                   Additional Information
                   <span>{showAdditionalInfo ? "▲" : "▼"}</span>
@@ -367,7 +381,11 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
                     justifyContent: "space-between",
                     alignItems: "center",
                   }}
-                  onClick={() => setShowTranslations(!showTranslations)}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTranslations(!showTranslations);
+                  }}
                 >
                   Name Translations
                   <span>{showTranslations ? "▲" : "▼"}</span>
@@ -399,8 +417,13 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  setHovered(false);
+                  setShowAdditionalInfo(false);
+                  setShowTranslations(false);
+                  selectBuilding(null);
                   toggleHidden(buildingId);
                 }}
+                onPointerDown={(e) => e.stopPropagation()}
                 style={{
                   width: "100%",
                   padding: "6px 10px",
