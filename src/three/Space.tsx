@@ -8,6 +8,11 @@ import { GLTFExporter } from "three/examples/jsm/Addons.js";
 import Car from "./Car";
 import instanceFleet from "@/api/axios";
 import { create } from "zustand";
+import {
+  ANNOTATION_COLORS,
+  BuildingAnnotationColor,
+  useBuildingAnnotationStore,
+} from "@/state/buildingAnnotationStore";
 
 const SCALE = 51000;
 
@@ -88,10 +93,24 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
   const [hoverPos, setHoverPos] = useState<THREE.Vector3 | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+  const [showAnnotationForm, setShowAnnotationForm] = useState(false);
+  const [annotationTitle, setAnnotationTitle] = useState("");
+  const [annotationNotes, setAnnotationNotes] = useState("");
+  const [annotationColor, setAnnotationColor] =
+    useState<BuildingAnnotationColor>("red");
 
   const toggleHidden = useHiddenStore((s) => s.toggleHidden);
   const selectedBuildingId = useHiddenStore((s) => s.selectedBuildingId);
   const selectBuilding = useHiddenStore((s) => s.selectBuilding);
+  const annotation = useBuildingAnnotationStore(
+    (s) => s.annotations[buildingId]
+  );
+  const upsertAnnotation = useBuildingAnnotationStore(
+    (s) => s.upsertAnnotation
+  );
+  const removeAnnotation = useBuildingAnnotationStore(
+    (s) => s.removeAnnotation
+  );
   const selected = selectedBuildingId === buildingId;
 
   const baseColor = getBuildingColor(tags);
@@ -122,6 +141,16 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
       }}
       onClick={(e) => {
         selectBuilding(selected ? null : buildingId);
+        e.stopPropagation();
+      }}
+      onContextMenu={(e) => {
+        e.nativeEvent.preventDefault();
+        setHoverPos(e.point.clone());
+        selectBuilding(buildingId);
+        setAnnotationTitle(annotation?.title ?? "");
+        setAnnotationNotes(annotation?.notes ?? "");
+        setAnnotationColor(annotation?.color ?? "red");
+        setShowAnnotationForm(true);
         e.stopPropagation();
       }}
       rotation={[-Math.PI / 2, 0, 0]}
@@ -182,6 +211,7 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
                   setHovered(false);
                   setShowAdditionalInfo(false);
                   setShowTranslations(false);
+                  setShowAnnotationForm(false);
                   selectBuilding(null);
                 }}
                 style={{
@@ -215,6 +245,171 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
                 ×
               </button>
             </div>
+
+            {showAnnotationForm && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  const title = annotationTitle.trim();
+                  const notes = annotationNotes.trim();
+                  if (!title) return;
+
+                  upsertAnnotation({
+                    buildingId,
+                    title,
+                    notes,
+                    color: annotationColor,
+                  });
+                  setShowAnnotationForm(false);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  display: "grid",
+                  gap: "8px",
+                  marginBottom: "10px",
+                  paddingBottom: "10px",
+                  borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+                }}
+              >
+                <input
+                  value={annotationTitle}
+                  onChange={(e) => setAnnotationTitle(e.target.value)}
+                  placeholder="Title"
+                  maxLength={48}
+                  style={{
+                    width: "100%",
+                    border: "1px solid rgba(17, 24, 39, 0.12)",
+                    borderRadius: "6px",
+                    padding: "7px 8px",
+                    backgroundColor: "rgba(255, 255, 255, 0.82)",
+                    color: "#111827",
+                    fontSize: "12px",
+                    outline: "none",
+                  }}
+                />
+                <textarea
+                  value={annotationNotes}
+                  onChange={(e) => setAnnotationNotes(e.target.value)}
+                  placeholder="Notes"
+                  rows={3}
+                  maxLength={220}
+                  style={{
+                    width: "100%",
+                    resize: "vertical",
+                    border: "1px solid rgba(17, 24, 39, 0.12)",
+                    borderRadius: "6px",
+                    padding: "7px 8px",
+                    backgroundColor: "rgba(255, 255, 255, 0.82)",
+                    color: "#111827",
+                    fontSize: "12px",
+                    outline: "none",
+                  }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "6px",
+                    alignItems: "center",
+                  }}
+                >
+                  {Object.entries(ANNOTATION_COLORS).map(([key, color]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-label={`Use ${key} marker`}
+                      onClick={() =>
+                        setAnnotationColor(key as BuildingAnnotationColor)
+                      }
+                      style={{
+                        width: "22px",
+                        height: "22px",
+                        borderRadius: "999px",
+                        border:
+                          annotationColor === key
+                            ? "2px solid #111827"
+                            : "1px solid rgba(17, 24, 39, 0.16)",
+                        backgroundColor: color,
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                  }}
+                >
+                  {annotation && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeAnnotation(buildingId);
+                        setShowAnnotationForm(false);
+                      }}
+                      style={{
+                        border: "none",
+                        backgroundColor: "transparent",
+                        color: "#ef4444",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        padding: "6px 0",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "6px",
+                      marginLeft: "auto",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setShowAnnotationForm(false)}
+                      style={{
+                        border: "1px solid rgba(17, 24, 39, 0.12)",
+                        borderRadius: "6px",
+                        backgroundColor: "rgba(255, 255, 255, 0.72)",
+                        color: "#374151",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        padding: "6px 9px",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!annotationTitle.trim()}
+                      style={{
+                        border: "1px solid rgba(37, 99, 235, 0.18)",
+                        borderRadius: "6px",
+                        backgroundColor: annotationTitle.trim()
+                          ? "#2563eb"
+                          : "rgba(148, 163, 184, 0.42)",
+                        color: "#ffffff",
+                        cursor: annotationTitle.trim()
+                          ? "pointer"
+                          : "not-allowed",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        padding: "6px 10px",
+                      }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
 
             {/* Core info or No Data */}
             {hasAnyData ? (
@@ -466,6 +661,7 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
                   setHovered(false);
                   setShowAdditionalInfo(false);
                   setShowTranslations(false);
+                  setShowAnnotationForm(false);
                   selectBuilding(null);
                   toggleHidden(buildingId);
                 }}
