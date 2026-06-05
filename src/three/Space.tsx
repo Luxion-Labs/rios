@@ -86,9 +86,16 @@ interface BuildingProps {
   extrudeSettings: { steps: number; depth: number; bevelEnabled: boolean };
   tags: Record<string, string | undefined>;
   buildingId: number;
+  markerPosition: THREE.Vector3;
 }
 
-function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
+function Building({
+  shape,
+  extrudeSettings,
+  tags,
+  buildingId,
+  markerPosition,
+}: BuildingProps) {
   const [hovered, setHovered] = useState(false);
   const [hoverPos, setHoverPos] = useState<THREE.Vector3 | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
@@ -126,7 +133,48 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
     tags["addr:street"];
 
   return (
-    <mesh
+    <>
+      {annotation && (
+        <group position={markerPosition}>
+          <mesh position={[0, 4, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 8, 12]} />
+            <meshBasicMaterial
+              color={ANNOTATION_COLORS[annotation.color]}
+              transparent
+              opacity={0.42}
+            />
+          </mesh>
+          <pointLight
+            color={ANNOTATION_COLORS[annotation.color]}
+            intensity={0.75}
+            distance={18}
+          />
+          <Html position={[0, 8.5, 0]} center>
+            <div
+              style={{
+                maxWidth: "160px",
+                padding: "4px 8px",
+                borderRadius: "999px",
+                backgroundColor: "rgba(255, 255, 255, 0.88)",
+                border: `1px solid ${ANNOTATION_COLORS[annotation.color]}44`,
+                color: "#111827",
+                boxShadow: "0 8px 20px rgba(15, 23, 42, 0.14)",
+                fontSize: "11px",
+                fontWeight: 700,
+                lineHeight: 1.25,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                pointerEvents: "none",
+              }}
+            >
+              {annotation.title}
+            </div>
+          </Html>
+        </group>
+      )}
+      <mesh
       onPointerOver={(e) => {
         setHovered(true);
         e.stopPropagation();
@@ -694,7 +742,8 @@ function Building({ shape, extrudeSettings, tags, buildingId }: BuildingProps) {
           </div>
         </Html>
       )}
-    </mesh>
+      </mesh>
+    </>
   );
 }
 
@@ -930,6 +979,13 @@ export function Space() {
           extrudeSettings,
           tags: bld.tags,
           buildingId: bld.id,
+          markerPosition: new THREE.Vector3(
+            shapePoints.reduce((sum, point) => sum + point.x, 0) /
+              shapePoints.length,
+            heightValue + 0.4,
+            -shapePoints.reduce((sum, point) => sum + point.y, 0) /
+              shapePoints.length
+          ),
         });
       }
     );
@@ -959,6 +1015,7 @@ export function Space() {
             extrudeSettings={item.extrudeSettings}
             tags={item.tags}
             buildingId={item.buildingId}
+            markerPosition={item.markerPosition}
           />
         )
       )}
