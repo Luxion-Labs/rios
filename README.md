@@ -139,20 +139,4 @@ Contributions are welcome. Open an issue to propose changes or start a pull requ
 If you intend to contribute substantial features, open an issue describing the design before implementing the change.
 
 ## License
-
-This repository is currently private. Choose a license and update `package.json` to reflect the project license when you make the repository public.
-
-## Contact
-
-For questions or collaboration inquiries open an issue or contact the maintainers through the repository.
-
-<!-- Footer image and duplicated header removed by request -->
-
-
----
-
-## Maintainer Response SLA
-Luxion Labs enforces a strict 24-hour response SLA on all community issues, feature proposals, and pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines.
-
-## License
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
